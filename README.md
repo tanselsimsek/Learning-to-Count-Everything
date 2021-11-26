@@ -30,7 +30,20 @@ Modeling, Segmentation, and Reconstruction](https://openaccess.thecvf.com/conten
  - [Look Before You Leap: Learning Landmark Features
 for One-Stage Visual Grounding](https://openaccess.thecvf.com/content/CVPR2021/papers/Huang_Look_Before_You_Leap_Learning_Landmark_Features_for_One-Stage_Visual_CVPR_2021_paper.pdf)
  - [Rethinking Style Transfer: From Pixels to Parameterized Brushstrokes](https://openaccess.thecvf.com/content/CVPR2021/papers/Kotovenko_Rethinking_Style_Transfer_From_Pixels_to_Parameterized_Brushstrokes_CVPR_2021_paper.pdf)
- - 
+ 
+- Text-to-Image: [Improving Text-to-Image Synthesis Using Contrastive Learning](https://arxiv.org/pdf/2107.02423v1.pdf) ([code here](https://github.com/huiyegit/T2I_CL))
+
+-  Image reconstruction: [PI-REC: Progressive Image Reconstruction Network With Edge and Color
+Domain](https://arxiv.org/pdf/1903.10146v1.pdf) ([code here](https://github.com/youyuge34/PI-REC))
+
+- People counting: [Locate, Size and Count: Accurately Resolving
+People in Dense Crowds via Detection](https://arxiv.org/pdf/1906.07538v3.pdf) ([code here](https://github.com/val-iisc/lsc-cnn))
+
+- Human emotion recognition: [Emotion Recognition in Conversation: Research
+Challenges, Datasets, and Recent Advances](https://arxiv.org/pdf/1905.02947v1.pdf) ([code here](https://github.com/declare-lab/conv-emotion))
+
+- 
+
 
 
 
