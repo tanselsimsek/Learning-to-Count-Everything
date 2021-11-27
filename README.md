@@ -42,8 +42,15 @@ People in Dense Crowds via Detection](https://arxiv.org/pdf/1906.07538v3.pdf) ([
 - Human emotion recognition: [Emotion Recognition in Conversation: Research
 Challenges, Datasets, and Recent Advances](https://arxiv.org/pdf/1905.02947v1.pdf) ([code here](https://github.com/declare-lab/conv-emotion))
 
-- 
+- [TrackNet: A Deep Learning Network for Tracking
+High-speed and Tiny Objects in Sports Applications](https://arxiv.org/pdf/1907.03698v1.pdf) 
 
+- [Learning to score the figure skating sports videos](https://arxiv.org/pdf/1802.02774v3.pdf)
 
+- [Learning What to Learn for Video Object
+Segmentation](https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123470766.pdf)
 
+- [Reconstructing NBA Players](http://grail.cs.washington.edu/projects/nba_players/)
 
+- [Fashionpedia: Ontology, Segmentation, and an
+Attribute Localization Dataset](https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123460307.pdf)
