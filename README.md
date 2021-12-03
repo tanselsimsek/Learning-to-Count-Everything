@@ -1,6 +1,6 @@
 # Final_Project
 
-#References
+### References
 - [Learning To Count Everything](https://openaccess.thecvf.com/content/CVPR2021/papers/Ranjan_Learning_To_Count_Everything_CVPR_2021_paper.pdf)
 - [Git Repository](https://github.com/cvlab-stonybrook/LearningToCountEverything)
 
