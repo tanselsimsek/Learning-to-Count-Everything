@@ -183,17 +183,20 @@ def extract_features(feature_model, image, boxes,feat_map_keys=['map3','map4'], 
                 y1, x1 = int(boxes_scaled[j,1]), int(boxes_scaled[j,2])  
                 y2, x2 = int(boxes_scaled[j,3]), int(boxes_scaled[j,4]) 
                 #print(y1,y2,x1,x2,max_h,max_w)
-                if j == 0:
-                    examples_features = image_features[:,:,y1:y2, x1:x2]
-                    if examples_features.shape[2] != max_h or examples_features.shape[3] != max_w:
-                        #examples_features = pad_to_size(examples_features, max_h, max_w)
-                        examples_features = F.interpolate(examples_features, size=(max_h,max_w),mode='bilinear')                    
-                else:
-                    feat = image_features[:,:,y1:y2, x1:x2]
-                    if feat.shape[2] != max_h or feat.shape[3] != max_w:
-                        feat = F.interpolate(feat, size=(max_h,max_w),mode='bilinear')
-                        #feat = pad_to_size(feat, max_h, max_w)
-                    examples_features = torch.cat((examples_features,feat),dim=0)
+                try:
+                    if j == 0:
+                        examples_features = image_features[:,:,y1:y2, x1:x2]
+                        if examples_features.shape[2] != max_h or examples_features.shape[3] != max_w:
+                            #examples_features = pad_to_size(examples_features, max_h, max_w)
+                            examples_features = F.interpolate(examples_features, size=(max_h,max_w),mode='bilinear')                    
+                    else:
+                        feat = image_features[:,:,y1:y2, x1:x2]
+                        if feat.shape[2] != max_h or feat.shape[3] != max_w:
+                            feat = F.interpolate(feat, size=(max_h,max_w),mode='bilinear')
+                            #feat = pad_to_size(feat, max_h, max_w)
+                        examples_features = torch.cat((examples_features,feat),dim=0)
+                except:
+                    continue
             """
             Convolving example features over image features
             """

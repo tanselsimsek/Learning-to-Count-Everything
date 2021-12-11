@@ -73,8 +73,6 @@ class Resnet50FPN(nn.Module):
         feat['map4'] = feat_map4
         return feat
 
-
-#this class is the upsampling block (usign UpsamplingBilinear2d)
 class CountRegressor(nn.Module):
     def __init__(self, input_channels,pool='mean'):
         super(CountRegressor, self).__init__()
