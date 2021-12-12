@@ -102,16 +102,16 @@ def YOLO_boxes(results_yolo, annotations, threshold=4):
 
 
 def test(data, num_img, backbone_model, regressor, yolo_model, yolo_flag, yolo_threshold, annotations, 
-         plot_flag=False, im_dir='data/images_384_VarV2', use_gpu=False, model_path='model.pth',
+         plot_flag=False, im_dir='data/images_384_VarV2', enable_gpu=False, model_path='model.pth',
          adapt=True, gradient_steps=100, learning_rate=1e-7):
 
     weight_mincount = 1e-9
     weight_perturbation = 1e-4
 
-    if use_gpu: backbone_model.cuda()
+    if enable_gpu: backbone_model.cuda()
     backbone_model.eval()
     
-    if use_gpu:
+    if enable_gpu:
         regressor.load_state_dict(torch.load(model_path)).cuda()
     else:
         regressor.load_state_dict(torch.load(model_path,map_location=torch.device('cpu')))
@@ -206,9 +206,10 @@ def test(data, num_img, backbone_model, regressor, yolo_model, yolo_flag, yolo_t
         image.show()
         sample = {'image': image, 'lines_boxes': rects}
         sample = Transform(sample)
+        
         image, boxes = sample['image'], sample['boxes']
-
-        if use_gpu:
+        
+        if enable_gpu:
             image = image.cuda()
             boxes = boxes.cuda()
 
@@ -253,7 +254,7 @@ def test(data, num_img, backbone_model, regressor, yolo_model, yolo_flag, yolo_t
 
 def train(data, backbone_model, regressor, optimizer, criterion, yolo_model, yolo_flag,
           yolo_threshold,n_img,shuffle_flag, annotations, plot_flag=False, im_dir='data/images_384_VarV2', 
-          best_mae=1e7, best_rmse=1e7, gt_dir='gt_density_map_adaptive_384_VarV2'):
+          best_mae=1e7, best_rmse=1e7, gt_dir='gt_density_map_adaptive_384_VarV2',enable_gpu=True):
 
     print("Training on FSC147 train set data")
     im_ids = data[:n_img]
@@ -348,8 +349,10 @@ def train(data, backbone_model, regressor, optimizer, criterion, yolo_model, yol
 
         sample = {'image':image,'lines_boxes':rects,'gt_density':density}
         sample = TransformTrain(sample)
-        #image, boxes,gt_density = sample['image'].cuda(), sample['boxes'].cuda(),sample['gt_density'].cuda()
-        image, boxes,gt_density = sample['image'], sample['boxes'],sample['gt_density']
+        if enable_gpu:
+          image, boxes,gt_density = sample['image'].cuda(), sample['boxes'].cuda(),sample['gt_density'].cuda()
+        else:
+          image, boxes,gt_density = sample['image'], sample['boxes'],sample['gt_density']
 
         with torch.no_grad():
             features = extract_features(backbone_model, image.unsqueeze(0), boxes.unsqueeze(0), MAPS, Scales)
@@ -382,7 +385,7 @@ def train(data, backbone_model, regressor, optimizer, criterion, yolo_model, yol
 
 
 def eval(data, backbone_model, regressor, yolo_model, yolo_flag, yolo_threshold, 
-         n_img, annotations, plot_flag=False, im_dir='data/images_384_VarV2'):
+         n_img, annotations, plot_flag=False, im_dir='data/images_384_VarV2',enable_gpu=True):
     cnt = 0
     SAE = 0 # sum of absolute errors
     SSE = 0 # sum of square errors
@@ -469,8 +472,10 @@ def eval(data, backbone_model, regressor, yolo_model, yolo_flag, yolo_threshold,
         sample = {'image':image,'lines_boxes':rects}
         sample = Transform(sample)
         sample['image'].shape
-        #image, boxes = sample['image'].cuda(), sample['boxes'].cuda()
-        image, boxes = sample['image'], sample['boxes']
+        if enable_gpu:
+          image, boxes = sample['image'].cuda(), sample['boxes'].cuda()
+        else:
+          image, boxes = sample['image'], sample['boxes']
 
         with torch.no_grad():
             output = regressor(extract_features(backbone_model, image.unsqueeze(0), boxes.unsqueeze(0), MAPS, Scales))
@@ -491,7 +496,7 @@ def eval(data, backbone_model, regressor, yolo_model, yolo_flag, yolo_threshold,
 
 def run_train_phase(epochs, backbone_model, regressor, yolo_model, optimizer, criterion, data_train, shuffle, data_val, 
                     num_img_train, num_img_val, yolo_flag, yolo_threshold, plot_flag, annotations,
-                    save='model.pth', im_dir='data/images_384_VarV2', gt_dir='gt_density_map_adaptive_384_VarV2'):
+                    save='model.pth', im_dir='data/images_384_VarV2', gt_dir='gt_density_map_adaptive_384_VarV2',enable_gpu=True):
 
     best_mae, best_rmse = 1e7, 1e7
     stats = list()
@@ -500,12 +505,12 @@ def run_train_phase(epochs, backbone_model, regressor, yolo_model, optimizer, cr
         train_loss,train_mae,train_rmse = train(data=data_train, backbone_model=backbone_model, yolo_model=yolo_model, yolo_flag = yolo_flag, 
                                                 optimizer=optimizer, criterion=criterion, regressor=regressor, yolo_threshold = yolo_threshold,n_img = num_img_train, annotations=annotations,
                                                 shuffle_flag=shuffle,plot_flag=plot_flag, im_dir=im_dir, best_mae=best_mae, best_rmse=best_rmse,
-                                                gt_dir=gt_dir)
+                                                gt_dir=gt_dir,enable_gpu=enable_gpu)
         regressor.eval()
         val_mae,val_rmse = eval(data=data_val, backbone_model=backbone_model, regressor=regressor, 
                                 annotations=annotations, yolo_model=yolo_model, 
                                 yolo_flag=yolo_flag, yolo_threshold=yolo_threshold, 
-                                n_img=num_img_val, plot_flag=plot_flag, im_dir=im_dir)
+                                n_img=num_img_val, plot_flag=plot_flag, im_dir=im_dir,enable_gpu=enable_gpu)
         stats.append((train_loss, train_mae, train_rmse, val_mae, val_rmse))
         stats_file = "stats"+ ".txt"
         with open(stats_file, 'w') as f:
