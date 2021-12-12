@@ -134,3 +134,5 @@ dmypy.json
 /notebooks
 *.pptx
 *.pdf
+*.pt
+*.pth
