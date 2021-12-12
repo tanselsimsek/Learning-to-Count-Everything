@@ -276,12 +276,9 @@ def test(data, num_img, backbone_model, regressor, yolo_model, yolo_flag, yolo_t
 
 def train(data, backbone_model, regressor, optimizer, criterion, yolo_model, yolo_flag,
           yolo_threshold,n_img,shuffle_flag, annotations, plot_flag=False, im_dir='data/images_384_VarV2', 
-<<<<<<< HEAD
-          best_mae=1e7, best_rmse=1e7, gt_dir='gt_density_map_adaptive_384_VarV2',enable_gpu=True):
-=======
           best_mae=1e7, best_rmse=1e7, gt_dir='gt_density_map_adaptive_384_VarV2', augment=True,
-          bright0=0.05, bright1=1.3, contr0=0.9, contr1=1.1, epoch=0, checkpoint_dir='checkpoints/'):
->>>>>>> main
+          bright0=0.05, bright1=1.3, contr0=0.9, contr1=1.1, epoch=0, checkpoint_dir='checkpoints/', 
+          enable_gpu=True):
 
     print("Training on FSC147 train set data")
     im_ids = data[:n_img]
@@ -533,19 +530,15 @@ def eval(data, backbone_model, regressor, yolo_model, yolo_flag, yolo_threshold,
 
 def run_train_phase(epochs, backbone_model, regressor, yolo_model, optimizer, criterion, data_train, shuffle, data_val, 
                     num_img_train, num_img_val, yolo_flag, yolo_threshold, plot_flag, annotations,
-<<<<<<< HEAD
-                    save='model.pth', im_dir='data/images_384_VarV2', gt_dir='gt_density_map_adaptive_384_VarV2',enable_gpu=True):
-=======
                     save='model.pth', im_dir='data/images_384_VarV2', gt_dir='gt_density_map_adaptive_384_VarV2',
                     augment=True, bright0=0.05, bright1=1.3, contr0=0.9, contr1=1.1, checkpoint_dir='checkpoints/', 
-                    load_checkpoint="path/to/checkpoint/checkpoint.pt"):
+                    load_checkpoint="path/to/checkpoint/checkpoint.pt", enable_gpu=True):
 
     if load_checkpoint:
         ckp_path = load_checkpoint
         regressor, optimizer, start_epoch = load_ckp(ckp_path, regressor, optimizer)
     else:
         start_epoch=0
->>>>>>> main
 
     best_mae, best_rmse = 1e7, 1e7
     stats = list()
@@ -554,14 +547,12 @@ def run_train_phase(epochs, backbone_model, regressor, yolo_model, optimizer, cr
         train_loss,train_mae,train_rmse = train(data=data_train, backbone_model=backbone_model, yolo_model=yolo_model, yolo_flag = yolo_flag, 
                                                 optimizer=optimizer, criterion=criterion, regressor=regressor, yolo_threshold = yolo_threshold,n_img = num_img_train, annotations=annotations,
                                                 shuffle_flag=shuffle,plot_flag=plot_flag, im_dir=im_dir, best_mae=best_mae, best_rmse=best_rmse,
-<<<<<<< HEAD
-                                                gt_dir=gt_dir,enable_gpu=enable_gpu)
-=======
                                                 gt_dir=gt_dir, augment=augment, bright0=bright0, bright1=bright1,
                                                 contr0=contr0, contr1=contr1, epoch=epoch, 
-                                                checkpoint_dir=checkpoint_dir)
->>>>>>> main
+                                                checkpoint_dir=checkpoint_dir, enable_gpu=enable_gpu)
+                                                
         regressor.eval()
+        
         val_mae,val_rmse = eval(data=data_val, backbone_model=backbone_model, regressor=regressor, 
                                 annotations=annotations, yolo_model=yolo_model, 
                                 yolo_flag=yolo_flag, yolo_threshold=yolo_threshold, 
