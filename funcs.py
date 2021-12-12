@@ -112,11 +112,10 @@ def test(data, num_img, backbone_model, regressor, yolo_model, yolo_flag, yolo_t
     backbone_model.eval()
     
     if use_gpu:
-        regressor.load_state_dict(torch.load(model_path))
+        regressor.load_state_dict(torch.load(model_path)).cuda()
     else:
         regressor.load_state_dict(torch.load(model_path,map_location=torch.device('cpu')))
 
-    if use_gpu: regressor.cuda()
     regressor.eval()
 
     cnt = 0
@@ -345,7 +344,7 @@ def train(data, backbone_model, regressor, optimizer, criterion, yolo_model, yol
             if yolo_res:
                 rects += yolo_res
         else:
-            yolo_obj_cnt
+            yolo_obj_cnt=0
 
         sample = {'image':image,'lines_boxes':rects,'gt_density':density}
         sample = TransformTrain(sample)

@@ -55,8 +55,8 @@ class VGG16FPN(nn.Module):
         return feat
         
 class Resnet50FPN(nn.Module):
-    def _init_(self):
-        super(Resnet50FPN, self)._init_()
+    def __init__(self):
+        super(Resnet50FPN, self).__init__()
         self.resnet = torchvision.models.resnet50(pretrained=True)
         children = list(self.resnet.children())
         self.conv1 = nn.Sequential(*children[:4])
@@ -119,6 +119,59 @@ class CountRegressor(nn.Module):
                 else:
                     Output = torch.cat((Output,output),dim=0)
             return Output
+
+
+class CountRegressorAML(nn.Module):
+    def __init__(self, input_channels,pool='mean',p=0.3):
+        super(CountRegressor, self).__init__()
+        self.pool = pool
+        self.regressor = nn.Sequential(
+            nn.Conv2d(input_channels, 196, 7, padding=3),
+            nn.ReLU(),
+            #Applies a 2D bilinear upsampling to an input signal composed of several input channels
+            #given a tensor of size 2, UpsamplingBilinear2d(scale_factor=2) return an array of size 4
+            nn.UpsamplingBilinear2d(scale_factor=2),
+            nn.Conv2d(196, 128, 5, padding=2),
+            nn.Dropout(p),
+            nn.ReLU(),
+            nn.UpsamplingBilinear2d(scale_factor=2),
+            nn.Conv2d(128, 64, 3, padding=1),
+            nn.Dropout(p-0.05),
+            nn.ReLU(),
+            nn.UpsamplingBilinear2d(scale_factor=2),
+            nn.Conv2d(64, 32, 1),
+            nn.Dropout(p-0.1),
+            nn.ReLU(),
+            nn.Conv2d(32, 1, 1),
+            nn.Dropout(p-0.15),
+            nn.ReLU(),
+        )
+
+    def forward(self, im):
+        num_sample =  im.shape[0]
+        if num_sample == 1:
+            output = self.regressor(im.squeeze(0))
+            #Average Pooling is a pooling operation that calculates the average value for patches of a feature map
+            if self.pool == 'mean':
+                output = torch.mean(output, dim=(0),keepdim=True)  
+                return output
+            #Usual max-pooling operation over the features map
+            elif self.pool == 'max':
+                output, _ = torch.max(output, 0,keepdim=True)
+                return output
+        else:
+            for i in range(0,num_sample):
+                output = self.regressor(im[i])
+                if self.pool == 'mean':
+                    output = torch.mean(output, dim=(0),keepdim=True)
+                elif self.pool == 'max':
+                    output, _ = torch.max(output, 0,keepdim=True)
+                if i == 0:
+                    Output = output
+                else:
+                    Output = torch.cat((Output,output),dim=0)
+            return Output
+
 
 #The following two function are used to weight init
 def weights_normal_init(model, dev=0.01):
