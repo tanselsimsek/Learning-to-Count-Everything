@@ -133,10 +133,9 @@ def test(data, num_img, backbone_model, regressor, yolo_model, yolo_flag, yolo_t
     if enable_gpu: backbone_model.cuda()
     backbone_model.eval()
     
+    regressor.load_state_dict(torch.load(model_path))
     if enable_gpu:
-        regressor.load_state_dict(torch.load(model_path)).cuda()
-    else:
-        regressor.load_state_dict(torch.load(model_path,map_location=torch.device('cpu')))
+        regressor.cuda()
 
     regressor.eval()
 
@@ -552,7 +551,7 @@ def run_train_phase(epochs, backbone_model, regressor, yolo_model, optimizer, cr
                                                 checkpoint_dir=checkpoint_dir, enable_gpu=enable_gpu)
                                                 
         regressor.eval()
-        
+
         val_mae,val_rmse = eval(data=data_val, backbone_model=backbone_model, regressor=regressor, 
                                 annotations=annotations, yolo_model=yolo_model, 
                                 yolo_flag=yolo_flag, yolo_threshold=yolo_threshold, 
