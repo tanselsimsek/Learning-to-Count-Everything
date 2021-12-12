@@ -142,6 +142,8 @@ def test(data, num_img, backbone_model, regressor, yolo_model, yolo_flag, yolo_t
     cnt = 0
     SAE = 0  # sum of absolute errors
     SSE = 0  # sum of square errors
+    SAE_yolo = 0  # sum of absolute errors
+    SSE_yolo = 0  # sum of square errors
 
     print("Testing")
     n_imgs = num_img
@@ -262,15 +264,18 @@ def test(data, num_img, backbone_model, regressor, yolo_model, yolo_flag, yolo_t
         pred_cnt = output.sum().item()
         cnt = cnt + 1
         err = abs(gt_cnt - pred_cnt)
+        err_yolo = abs(gt_cnt - yolo_obj_cnt)
         SAE += err
         SSE += err**2
+        SAE_yolo += err_yolo
+        SSE_yolo += err_yolo**2
 
         pbar.set_description('{:<8}: actual-predicted: {:6d}, {:6.1f}, error: {:6.1f}. Current MAE: {:5.2f}, RMSE: {:5.2f}, YOLO: {:6.1f}'.\
                             format(im_id, gt_cnt, pred_cnt, abs(pred_cnt - gt_cnt), SAE/cnt, (SSE/cnt)**0.5, yolo_obj_cnt))
         print("")
 
     print('On test, MAE: {:6.2f}, RMSE: {:6.2f}'.format(SAE/cnt, (SSE/cnt)**0.5))
-
+    return SAE/cnt, (SSE/cnt)**0.5, SAE_yolo/cnt, (SSE_yolo/cnt)**0.5
 
 
 def train(data, backbone_model, regressor, optimizer, criterion, yolo_model, yolo_flag,
@@ -285,9 +290,12 @@ def train(data, backbone_model, regressor, optimizer, criterion, yolo_model, yol
         random.shuffle(im_ids)
     train_mae = 0
     train_rmse = 0
+    train_mae_yolo = 0
+    train_rmse_yolo = 0
     train_loss = 0
     pbar = tqdm(im_ids)
     cnt = 0
+
     for im_id in pbar:
         cnt += 1
         anno = annotations[im_id]
@@ -399,22 +407,30 @@ def train(data, backbone_model, regressor, optimizer, criterion, yolo_model, yol
         pred_cnt = torch.sum(output).item()
         gt_cnt = torch.sum(gt_density).item()
         cnt_err = abs(pred_cnt - gt_cnt)
+        err_yolo = abs(gt_cnt - yolo_obj_cnt)
         train_mae += cnt_err
-        train_rmse += cnt_err ** 2
-
-        checkpoint = {
-            'epoch': epoch + 1,
-            'state_dict': regressor.state_dict(),
-            'optimizer': optimizer.state_dict()
-        }
-        save_ckp(checkpoint, checkpoint_dir)
+        train_rmse += cnt_err**2
+        train_mae_yolo += err_yolo
+        train_rmse_yolo += err_yolo**2
 
         pbar.set_description('actual:{:6.1f} -- predicted:{:6.1f} -- YOLO:{:6.1f} -- FAMNet error:{:6.1f} -- YOLO error:{:6.1f} -- Current MAE:{:5.2f} -- RMSE:{:5.2f} -- Best VAL MAE:{:5.2f} -- RMSE: {:5.2f}'.format( gt_cnt, pred_cnt, yolo_obj_cnt,abs(pred_cnt - gt_cnt),abs(yolo_obj_cnt - gt_cnt), train_mae/cnt, (train_rmse/cnt)**0.5,best_mae,best_rmse))
         print("")
+
+    checkpoint = {
+        'epoch': epoch + 1,
+        'state_dict': regressor.state_dict(),
+        'optimizer': optimizer.state_dict()
+    }
+    save_ckp(checkpoint, checkpoint_dir)
+    
     train_loss = train_loss / len(im_ids)
     train_mae = (train_mae / len(im_ids))
     train_rmse = (train_rmse / len(im_ids))**0.5
-    return train_loss,train_mae,train_rmse
+
+    train_mae_yolo = (train_mae_yolo / len(im_ids))
+    train_rmse_yolo = (train_rmse_yolo / len(im_ids))**0.5
+
+    return train_loss,train_mae,train_rmse, train_mae_yolo, train_rmse_yolo
 
 
 def eval(data, backbone_model, regressor, yolo_model, yolo_flag, yolo_threshold, 
@@ -422,10 +438,13 @@ def eval(data, backbone_model, regressor, yolo_model, yolo_flag, yolo_threshold,
     cnt = 0
     SAE = 0 # sum of absolute errors
     SSE = 0 # sum of square errors
+    SAE_yolo = 0 # sum of absolute errors
+    SSE_yolo = 0 # sum of square errors
 
     print("Evaluation")
     im_ids = data[:n_img]
     pbar = tqdm(im_ids)
+
     for im_id in pbar:
         anno = annotations[im_id]
         bboxes = anno['box_examples_coordinates']
@@ -517,14 +536,17 @@ def eval(data, backbone_model, regressor, yolo_model, yolo_flag, yolo_threshold,
         pred_cnt = output.sum().item()
         cnt = cnt + 1
         err = abs(gt_cnt - pred_cnt)
+        err_yolo = abs(gt_cnt - yolo_obj_cnt)
         SAE += err
         SSE += err**2
+        SAE_yolo += err_yolo
+        SSE_yolo += err_yolo**2
 
         pbar.set_description('{:<8}: actual-predicted: {:6d}, {:6.1f}, error: {:6.1f}. Current MAE: {:5.2f}, RMSE: {:5.2f}, YOLO: {:6.1f}'.format(im_id, gt_cnt, pred_cnt, abs(pred_cnt - gt_cnt), SAE/cnt, (SSE/cnt)**0.5, yolo_obj_cnt))
         print("")
 
     print('On evaluation data, MAE: {:6.2f}, RMSE: {:6.2f}'.format(SAE/cnt, (SSE/cnt)**0.5))
-    return SAE/cnt, (SSE/cnt)**0.5
+    return SAE/cnt, (SSE/cnt)**0.5, SAE_yolo/cnt, (SSE_yolo/cnt)**0.5
 
 
 def run_train_phase(epochs, backbone_model, regressor, yolo_model, optimizer, criterion, data_train, shuffle, data_val, 
@@ -541,9 +563,10 @@ def run_train_phase(epochs, backbone_model, regressor, yolo_model, optimizer, cr
 
     best_mae, best_rmse = 1e7, 1e7
     stats = list()
+    stats_yolo = list()
     for epoch in range(start_epoch,epochs):
         regressor.train()
-        train_loss,train_mae,train_rmse = train(data=data_train, backbone_model=backbone_model, yolo_model=yolo_model, yolo_flag = yolo_flag, 
+        train_loss,train_mae,train_rmse, train_mae_yolo, train_rmse_yolo = train(data=data_train, backbone_model=backbone_model, yolo_model=yolo_model, yolo_flag = yolo_flag, 
                                                 optimizer=optimizer, criterion=criterion, regressor=regressor, yolo_threshold = yolo_threshold,n_img = num_img_train, annotations=annotations,
                                                 shuffle_flag=shuffle,plot_flag=plot_flag, im_dir=im_dir, best_mae=best_mae, best_rmse=best_rmse,
                                                 gt_dir=gt_dir, augment=augment, bright0=bright0, bright1=bright1,
@@ -552,12 +575,17 @@ def run_train_phase(epochs, backbone_model, regressor, yolo_model, optimizer, cr
                                                 
         regressor.eval()
 
-        val_mae,val_rmse = eval(data=data_val, backbone_model=backbone_model, regressor=regressor, 
+        val_mae,val_rmse, val_mae_yolo, val_rmse_yolo = eval(data=data_val, backbone_model=backbone_model, regressor=regressor, 
                                 annotations=annotations, yolo_model=yolo_model, 
                                 yolo_flag=yolo_flag, yolo_threshold=yolo_threshold, 
                                 n_img=num_img_val, plot_flag=plot_flag, im_dir=im_dir,enable_gpu=enable_gpu)
         stats.append((train_loss, train_mae, train_rmse, val_mae, val_rmse))
+        stats_yolo.append((train_mae_yolo, train_rmse_yolo, val_mae_yolo, val_rmse_yolo))
         stats_file = "stats"+ ".txt"
+        with open(stats_file, 'w') as f:
+            for s in stats:
+                f.write("%s\n" % ','.join([str(x) for x in s]))  
+        stats_file = "stats_yolo"+ ".txt"
         with open(stats_file, 'w') as f:
             for s in stats:
                 f.write("%s\n" % ','.join([str(x) for x in s]))    
