@@ -123,7 +123,7 @@ class CountRegressor(nn.Module):
 
 class CountRegressorAML(nn.Module):
     def __init__(self, input_channels,pool='mean',p=0.3):
-        super(CountRegressor, self).__init__()
+        super(CountRegressorAML, self).__init__()
         self.pool = pool
         self.regressor = nn.Sequential(
             nn.Conv2d(input_channels, 196, 7, padding=3),
