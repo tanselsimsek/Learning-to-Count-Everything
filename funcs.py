@@ -16,6 +16,18 @@ from collections import Counter
 from utils_ltce import *
 from model import *
 import random
+import shutil
+
+
+def save_ckp(state, checkpoint_dir):
+    f_path = checkpoint_dir + '/checkpoint.pt'
+    torch.save(state, f_path)
+
+def load_ckp(checkpoint_fpath, model, optimizer):
+    checkpoint = torch.load(checkpoint_fpath)
+    model.load_state_dict(checkpoint['state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer'])
+    return model, optimizer, checkpoint['epoch']
 
 def count_class(results):
 
@@ -264,7 +276,7 @@ def test(data, num_img, backbone_model, regressor, yolo_model, yolo_flag, yolo_t
 def train(data, backbone_model, regressor, optimizer, criterion, yolo_model, yolo_flag,
           yolo_threshold,n_img,shuffle_flag, annotations, plot_flag=False, im_dir='data/images_384_VarV2', 
           best_mae=1e7, best_rmse=1e7, gt_dir='gt_density_map_adaptive_384_VarV2', augment=True,
-          bright0=0.05, bright1=1.3, contr0=0.9, contr1=1.1):
+          bright0=0.05, bright1=1.3, contr0=0.9, contr1=1.1, epoch=0, checkpoint_dir='checkpoints/'):
 
     print("Training on FSC147 train set data")
     im_ids = data[:n_img]
@@ -387,6 +399,13 @@ def train(data, backbone_model, regressor, optimizer, criterion, yolo_model, yol
         train_mae += cnt_err
         train_rmse += cnt_err ** 2
 
+        checkpoint = {
+            'epoch': epoch + 1,
+            'state_dict': regressor.state_dict(),
+            'optimizer': optimizer.state_dict()
+        }
+        save_ckp(checkpoint, checkpoint_dir)
+
         pbar.set_description('actual:{:6.1f} -- predicted:{:6.1f} -- YOLO:{:6.1f} -- FAMNet error:{:6.1f} -- YOLO error:{:6.1f} -- Current MAE:{:5.2f} -- RMSE:{:5.2f} -- Best VAL MAE:{:5.2f} -- RMSE: {:5.2f}'.format( gt_cnt, pred_cnt, yolo_obj_cnt,abs(pred_cnt - gt_cnt),abs(yolo_obj_cnt - gt_cnt), train_mae/cnt, (train_rmse/cnt)**0.5,best_mae,best_rmse))
         print("")
     train_loss = train_loss / len(im_ids)
@@ -506,17 +525,25 @@ def eval(data, backbone_model, regressor, yolo_model, yolo_flag, yolo_threshold,
 def run_train_phase(epochs, backbone_model, regressor, yolo_model, optimizer, criterion, data_train, shuffle, data_val, 
                     num_img_train, num_img_val, yolo_flag, yolo_threshold, plot_flag, annotations,
                     save='model.pth', im_dir='data/images_384_VarV2', gt_dir='gt_density_map_adaptive_384_VarV2',
-                    augment=True, bright0=0.05, bright1=1.3, contr0=0.9, contr1=1.1):
+                    augment=True, bright0=0.05, bright1=1.3, contr0=0.9, contr1=1.1, checkpoint_dir='checkpoints/', 
+                    load_checkpoint="path/to/checkpoint/checkpoint.pt"):
+
+    if load_checkpoint:
+        ckp_path = load_checkpoint
+        regressor, optimizer, start_epoch = load_ckp(ckp_path, regressor, optimizer)
+    else:
+        start_epoch=0
 
     best_mae, best_rmse = 1e7, 1e7
     stats = list()
-    for epoch in range(0,epochs):
+    for epoch in range(start_epoch,epochs):
         regressor.train()
         train_loss,train_mae,train_rmse = train(data=data_train, backbone_model=backbone_model, yolo_model=yolo_model, yolo_flag = yolo_flag, 
                                                 optimizer=optimizer, criterion=criterion, regressor=regressor, yolo_threshold = yolo_threshold,n_img = num_img_train, annotations=annotations,
                                                 shuffle_flag=shuffle,plot_flag=plot_flag, im_dir=im_dir, best_mae=best_mae, best_rmse=best_rmse,
                                                 gt_dir=gt_dir, augment=augment, bright0=bright0, bright1=bright1,
-                                                contr0=contr0, contr1=contr1)
+                                                contr0=contr0, contr1=contr1, epoch=epoch, 
+                                                checkpoint_dir=checkpoint_dir)
         regressor.eval()
         val_mae,val_rmse = eval(data=data_val, backbone_model=backbone_model, regressor=regressor, 
                                 annotations=annotations, yolo_model=yolo_model, 
