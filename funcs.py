@@ -23,8 +23,11 @@ def save_ckp(state, checkpoint_dir):
     f_path = checkpoint_dir + '/checkpoint.pt'
     torch.save(state, f_path)
 
-def load_ckp(checkpoint_fpath, model, optimizer):
-    checkpoint = torch.load(checkpoint_fpath)
+def load_ckp(checkpoint_fpath, model, optimizer, enable_gpu):
+    if enable_gpu:
+        checkpoint = torch.load(checkpoint_fpath)
+    else:
+        checkpoint = torch.load(checkpoint_fpath, map_location=lambda storage, loc: storage)
     model.load_state_dict(checkpoint['state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer'])
     return model, optimizer, checkpoint['epoch']
@@ -557,7 +560,7 @@ def run_train_phase(epochs, backbone_model, regressor, yolo_model, optimizer, cr
 
     if load_checkpoint:
         ckp_path = load_checkpoint
-        regressor, optimizer, start_epoch = load_ckp(ckp_path, regressor, optimizer)
+        regressor, optimizer, start_epoch = load_ckp(ckp_path, regressor, optimizer, enable_gpu)
     else:
         start_epoch=0
 
