@@ -147,6 +147,8 @@ def test(data, num_img, backbone_model, regressor, yolo_model, yolo_flag, yolo_t
     SSE = 0  # sum of square errors
     SAE_yolo = 0  # sum of absolute errors
     SSE_yolo = 0  # sum of square errors
+    SAE_ens = 0  # sum of absolute errors
+    SSE_ens = 0  # sum of square errors
 
     print("Testing")
     n_imgs = num_img
@@ -265,20 +267,24 @@ def test(data, num_img, backbone_model, regressor, yolo_model, yolo_flag, yolo_t
 
         gt_cnt = dots.shape[0]
         pred_cnt = output.sum().item()
+        ensemble_cnt = yolo_obj_cnt if pred_cnt < 3 else pred_cnt
         cnt = cnt + 1
         err = abs(gt_cnt - pred_cnt)
         err_yolo = abs(gt_cnt - yolo_obj_cnt)
+        err_ensemble = abs(ensemble_cnt - gt_cnt)
         SAE += err
         SSE += err**2
         SAE_yolo += err_yolo
         SSE_yolo += err_yolo**2
+        SAE_ens += err_ensemble
+        SSE_ens += err_ensemble**2
 
         pbar.set_description('{:<8}: actual-predicted: {:6d}, {:6.1f}, error: {:6.1f}. Current MAE: {:5.2f}, RMSE: {:5.2f}, YOLO: {:6.1f}'.\
                             format(im_id, gt_cnt, pred_cnt, abs(pred_cnt - gt_cnt), SAE/cnt, (SSE/cnt)**0.5, yolo_obj_cnt))
         print("")
 
     print('On test, MAE: {:6.2f}, RMSE: {:6.2f}'.format(SAE/cnt, (SSE/cnt)**0.5))
-    return SAE/cnt, (SSE/cnt)**0.5, SAE_yolo/cnt, (SSE_yolo/cnt)**0.5
+    return SAE/cnt, (SSE/cnt)**0.5, SAE_yolo/cnt, (SSE_yolo/cnt)**0.5, SAE_ens/cnt, (SSE_ens/cnt)**0.5
 
 
 def train(data, backbone_model, regressor, optimizer, criterion, yolo_model, yolo_flag,
