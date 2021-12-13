@@ -267,7 +267,7 @@ def test(data, num_img, backbone_model, regressor, yolo_model, yolo_flag, yolo_t
 
         gt_cnt = dots.shape[0]
         pred_cnt = output.sum().item()
-        ensemble_cnt = yolo_obj_cnt if pred_cnt < 3 else pred_cnt
+        ensemble_cnt = yolo_obj_cnt if ((pred_cnt < 3) & (pred_cnt < yolo_obj_cnt)) else pred_cnt
         cnt = cnt + 1
         err = abs(gt_cnt - pred_cnt)
         err_yolo = abs(gt_cnt - yolo_obj_cnt)
