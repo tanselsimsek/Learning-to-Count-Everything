@@ -19,8 +19,8 @@ import random
 import shutil
 
 
-def save_ckp(state, checkpoint_dir):
-    f_path = checkpoint_dir + '/checkpoint.pt'
+def save_ckp(state, checkpoint_dir, epoch):
+    f_path = checkpoint_dir + '/checkpoint' + str(epoch) + '.pt'
     torch.save(state, f_path)
 
 def load_ckp(checkpoint_fpath, model, optimizer, enable_gpu):
@@ -424,7 +424,8 @@ def train(data, backbone_model, regressor, optimizer, criterion, yolo_model, yol
         'state_dict': regressor.state_dict(),
         'optimizer': optimizer.state_dict()
     }
-    save_ckp(checkpoint, checkpoint_dir)
+    print('Saving the checkpoint for epoch ', str(epoch+1))
+    save_ckp(checkpoint, checkpoint_dir, epoch=epoch)
     
     train_loss = train_loss / len(im_ids)
     train_mae = (train_mae / len(im_ids))
@@ -561,12 +562,26 @@ def run_train_phase(epochs, backbone_model, regressor, yolo_model, optimizer, cr
     if load_checkpoint:
         ckp_path = load_checkpoint
         regressor, optimizer, start_epoch = load_ckp(ckp_path, regressor, optimizer, enable_gpu)
+        print('Loaded checkpoint which will start from ', str(start_epoch+1))
     else:
         start_epoch=0
 
     best_mae, best_rmse = 1e7, 1e7
-    stats = list()
-    stats_yolo = list()
+    if exists('stats.txt'):
+        with open('stats.txt', 'rU') as f:
+            stats = []
+            for ele in f:
+                line = ele.split('\n')
+                stats.append(line)
+
+        with open('stats_yolo.txt', 'rU') as f:
+            stats_yolo = []
+            for ele in f:
+                line = ele.split('\n')
+                stats_yolo.append(line)
+    else:
+        stats = list()
+        stats_yolo = list()
     for epoch in range(start_epoch,epochs):
         regressor.train()
         train_loss,train_mae,train_rmse, train_mae_yolo, train_rmse_yolo = train(data=data_train, backbone_model=backbone_model, yolo_model=yolo_model, yolo_flag = yolo_flag, 
@@ -582,15 +597,16 @@ def run_train_phase(epochs, backbone_model, regressor, yolo_model, optimizer, cr
                                 annotations=annotations, yolo_model=yolo_model, 
                                 yolo_flag=yolo_flag, yolo_threshold=yolo_threshold, 
                                 n_img=num_img_val, plot_flag=plot_flag, im_dir=im_dir,enable_gpu=enable_gpu)
-        stats.append((train_loss, train_mae, train_rmse, val_mae, val_rmse))
-        stats_yolo.append((train_mae_yolo, train_rmse_yolo, val_mae_yolo, val_rmse_yolo))
+
+        stats.append((epoch+1,train_loss, train_mae, train_rmse, val_mae, val_rmse))
+        stats_yolo.append((epoch+1,train_mae_yolo, train_rmse_yolo, val_mae_yolo, val_rmse_yolo))
         stats_file = "stats"+ ".txt"
         with open(stats_file, 'w') as f:
             for s in stats:
                 f.write("%s\n" % ','.join([str(x) for x in s]))  
         stats_file = "stats_yolo"+ ".txt"
         with open(stats_file, 'w') as f:
-            for s in stats:
+            for s in stats_yolo:
                 f.write("%s\n" % ','.join([str(x) for x in s]))    
         if best_mae >= val_mae:
             best_mae = val_mae
