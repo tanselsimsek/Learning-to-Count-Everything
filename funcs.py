@@ -231,7 +231,7 @@ def test(data, num_img, backbone_model, regressor, yolo_model, yolo_flag, yolo_t
         image = Image.open('{}/{}'.format(im_dir, im_id))
         image_path = '{}/{}'.format(im_dir, im_id)
         image.load()
-        image.show()
+        #image.show()
         sample = {'image': image, 'lines_boxes': rects}
         sample = Transform(sample)
         
@@ -283,7 +283,7 @@ def test(data, num_img, backbone_model, regressor, yolo_model, yolo_flag, yolo_t
                             format(im_id, gt_cnt, pred_cnt, abs(pred_cnt - gt_cnt), SAE/cnt, (SSE/cnt)**0.5, yolo_obj_cnt))
         print("")
 
-    print('On test, MAE: {:6.2f}, RMSE: {:6.2f}'.format(SAE/cnt, (SSE/cnt)**0.5))
+    #print('On test, MAE: {:6.2f}, RMSE: {:6.2f}'.format(SAE/cnt, (SSE/cnt)**0.5))
     return SAE/cnt, (SSE/cnt)**0.5, SAE_yolo/cnt, (SSE_yolo/cnt)**0.5, SAE_ens/cnt, (SSE_ens/cnt)**0.5
 
 
