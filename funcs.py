@@ -283,8 +283,8 @@ def test(data, num_img, backbone_model, regressor, optimizer, yolo_model, yolo_f
         SAE_ens += err_ensemble
         SSE_ens += err_ensemble**2
 
-        pbar.set_description('{:<8}: actual-predicted: {:6d}, {:6.1f}, error: {:6.1f}. Current MAE: {:5.2f}, RMSE: {:5.2f}, YOLO: {:6.1f}'.\
-                            format(im_id, gt_cnt, pred_cnt, abs(pred_cnt - gt_cnt), SAE/cnt, (SSE/cnt)**0.5, yolo_obj_cnt))
+        pbar.set_description('{:<8}: actual-predicted-ensemble: {:6d}, {:6.1f}, {:6.1f}, error: {:6.1f}. Current MAE: {:5.2f}, RMSE: {:5.2f}, YOLO: {:6.1f}'.\
+                            format(im_id, gt_cnt, pred_cnt, ensemble_cnt, abs(pred_cnt - gt_cnt), SAE/cnt, (SSE/cnt)**0.5, yolo_obj_cnt))
         print("")
 
     #print('On test, MAE: {:6.2f}, RMSE: {:6.2f}'.format(SAE/cnt, (SSE/cnt)**0.5))
