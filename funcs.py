@@ -126,7 +126,7 @@ def YOLO_boxes(results_yolo, annotations, threshold=4):
     return final_list
 
 
-def test(data, num_img, backbone_model, regressor, yolo_model, yolo_flag, yolo_threshold, annotations, 
+def test(data, num_img, backbone_model, regressor, optimizer, yolo_model, yolo_flag, yolo_threshold, annotations, 
          plot_flag=False, im_dir='data/images_384_VarV2', enable_gpu=False, model_path='model.pth',
          adapt=True, gradient_steps=100, learning_rate=1e-7):
 
@@ -136,7 +136,11 @@ def test(data, num_img, backbone_model, regressor, yolo_model, yolo_flag, yolo_t
     if enable_gpu: backbone_model.cuda()
     backbone_model.eval()
     
-    regressor.load_state_dict(torch.load(model_path))
+    try:
+        regressor.load_state_dict(torch.load(model_path))
+    except:
+        regressor, _, _ = load_ckp(model_path, regressor, optimizer, enable_gpu)
+
     if enable_gpu:
         regressor.cuda()
 
