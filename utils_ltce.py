@@ -147,6 +147,7 @@ def extract_features(feature_model, image, boxes,feat_map_keys=['map3','map4'], 
         Cnter1 = 0
         for keys in feat_map_keys:
             image_features = Image_features[keys][ix].unsqueeze(0)
+            print('Image Map: ', image_features.size)
             if model_type=="resnet": 
                 if keys == 'map1' or keys == 'map2':
                     Scaling = 4.0
