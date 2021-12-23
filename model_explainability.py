@@ -1,11 +1,9 @@
-import torch.nn as nn
-from model import  Resnet50FPN,Wide_Resnet50_2,VGG16FPN,CountRegressor,weights_normal_init
-from utils_ltce import MAPS, Scales, Transform,TransformTrain,extract_features, visualize_output_and_save
-from PIL import Image
 import os
 import torch
-import argparse
 import json
+from PIL import Image
+import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
 from tqdm import tqdm
 from os.path import exists,join
@@ -16,23 +14,17 @@ import cv2
 import matplotlib.pyplot as plt
 from collections import defaultdict
 import torchvision.ops.boxes as bops
-
-import torch
-import torch.nn.functional as F
-from PIL import Image
-import os
-import json
-import numpy as np
+from model import  Resnet50FPN,Wide_Resnet50_2,VGG16FPN,CountRegressor,weights_normal_init
+from utils_ltce import MAPS, Scales, Transform,TransformTrain,extract_features, visualize_output_and_save
 from matplotlib.colors import LinearSegmentedColormap
-import torchvision
 from torchvision import models
 from torchvision import transforms
 from captum.attr import GradientShap
 from  interpretability_captum import visualize_image_attr
-
 import warnings
+import cv2
+from collections import Counter
 warnings.filterwarnings("ignore")
-
 
 data_path = '/Users/alessandroquattrociocchi/Git/AML/Final_Project/data/'
 output_dir = "./logsSave"
@@ -45,68 +37,22 @@ data_split_file = data_path + 'Train_Test_Val_FSC_147.json'
 im_dir = data_path + 'images_384_VarV2'
 gt_dir = data_path + 'gt_density_map_adaptive_384_VarV2'
 pre_trained_backbone = 'resnet' #choices=[resnet,wide_resnet,vgg16]
-
+model_path= data_path + 'pretrainedModels/FamNet_Save1.pth'
+output_folder = '/Users/alessandroquattrociocchi/Desktop/'
 
 ## YOLO
-import cv2
-from collections import defaultdict
-
-def YOLO_objects_count(image_path):
-
-    detections = model(image_path)
-    frame = cv2.imread(image_path)
-
-    #frame = cv2.imread(image_path)
-    #detections = model(frame[..., ::-1])
-    results = detections.pandas().xyxy[0].to_dict(orient="records")
-    for result in results:
-        con = result['confidence']
-        cs = result['class']
-        x1 = int(result['xmin'])
-        y1 = int(result['ymin'])
-        x2 = int(result['xmax'])
-        y2 = int(result['ymax'])
-        return results
-
-
-def count_class(results):
-
-    dict_ = defaultdict(int)
-    for i in results:
-        dict_[i['name']] += 1
-    num = max(dict_.values())
-
-    return num
-
-
+model_yolo = torch.hub.load('ultralytics/yolov5', 'yolov5l6', pretrained=True)
 if pre_trained_backbone == 'vgg16':
     backbone = VGG16FPN()
 elif pre_trained_backbone == 'resnet':
     backbone = Resnet50FPN()
-elif pre_trained_backbone == 'wide_resnet':
-    backbone = Wide_Resnet50_2()
 
 if not exists(output_dir):
     os.mkdir(output_dir)
 
-#setting id for each GPUs
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
-
-if not exists(output_dir):
-    os.mkdir(output_dir)
-
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
-
-#criterion = nn.MSELoss().cuda()
 criterion = nn.MSELoss()
 
-#backbone.cuda()
-#backbone.eval()
-
-model_path='/Users/alessandroquattrociocchi/Git/AML/Final_Project/data/pretrainedModels/FamNet_Save1.pth'
-regressor = CountRegressor(6, pool='mean')
+regressor = CountRegressor(6, pool='max')
 regressor.eval()
 regressor.load_state_dict(torch.load(model_path,map_location=torch.device('cpu')))
 optimizer = optim.Adam(regressor.parameters(), lr = learning_rate)
@@ -117,9 +63,20 @@ with open(anno_file) as f:
 with open(data_split_file) as f:
     data_split = json.load(f)
 
-from collections import Counter
+def YOLO_objects_count(image_path):
 
-model_yolo = torch.hub.load('ultralytics/yolov5', 'yolov5l6', pretrained=True)
+    detections = model_yolo(image_path)
+    frame = cv2.imread(image_path)
+
+    results = detections.pandas().xyxy[0].to_dict(orient="records")
+    for result in results:
+        con = result['confidence']
+        cs = result['class']
+        x1 = int(result['xmin'])
+        y1 = int(result['ymin'])
+        x2 = int(result['xmax'])
+        y2 = int(result['ymax'])
+        return results
 
 def count_class(results):
 
@@ -129,6 +86,7 @@ def count_class(results):
     num = max(dict_.values())
 
     return num
+
 
 def most_frequent(List):
     occurence_count = Counter(List)
@@ -205,17 +163,11 @@ def YOLO_boxes(results_yolo, annotations, threshold=4):
     return final_list
 
 
-
-
-def interpretability(image_path,grad_iter=1):
+def interpretability(image_path,pre_trained_backbone='resnet',grad_iter=1):
 
     img = Image.open(image_path)
-
     transform = transforms.Compose([
-    #transforms.Resize(256),
-    #transforms.CenterCrop(224),
-    transforms.ToTensor()
-    ])
+    transforms.ToTensor()])
 
     transform_normalize = transforms.Normalize(
         mean=[0.485, 0.456, 0.406],
@@ -225,9 +177,14 @@ def interpretability(image_path,grad_iter=1):
     transformed_img = transform(img)
     input = transform_normalize(transformed_img)
     input = input.unsqueeze(0)
+    
+    if pre_trained_backbone=='resnet':
+        model = models.resnet50(pretrained=True)
+        model = model.eval()
 
-    model = models.resnet50(pretrained=True)
-    model = model.eval()
+    elif pre_trained_backbone == 'vgg16':
+        model = models.vgg16(pretrained=True)
+        model = model.eval()
 
     output = model(input)
     output= F.softmax(output,dim=1)
@@ -238,15 +195,13 @@ def interpretability(image_path,grad_iter=1):
                                                     [(0, '#ffffff'),
                                                     (0.25, '#000000'),
                                                     (1, '#000000')], N=256)
-
-
     gradient_shap = GradientShap(model)
-
+   
     # Defining baseline distribution of images
     rand_img_dist = torch.cat([input * 0, input * 1])
 
     attributions_gs = gradient_shap.attribute(input,
-                                            n_samples=50,
+                                            n_samples=grad_iter,
                                             stdevs=0.0001,
                                             baselines=rand_img_dist,
                                             target=pred_label_idx)
@@ -311,8 +266,6 @@ def model_explainability(im_id,data=annotations,pre_trained_backbone='resnet',
             # Do whatever you want
             f1 = cv2.rectangle(frame_1, (x1, y1), (x2, y2),color=(255,0,0),thickness=3)
 
-        print('')
-        #print('YOLO:', yolo_res)
         if yolo_res:
             print('Updating rects')
             for i in yolo_res:
@@ -330,15 +283,12 @@ def model_explainability(im_id,data=annotations,pre_trained_backbone='resnet',
 
     sample = {'image':image,'lines_boxes':rects,'gt_density':density}
     sample = TransformTrain(sample)
-    #image, boxes,gt_density = sample['image'].cuda(), sample['boxes'].cuda(),sample['gt_density'].cuda()
     image, boxes,gt_density = sample['image'], sample['boxes'],sample['gt_density']
 
     if pre_trained_backbone == 'vgg16':
         backbone = VGG16FPN()
     elif pre_trained_backbone == 'resnet':
         backbone = Resnet50FPN()
-    elif pre_trained_backbone == 'wide_resnet':
-        backbone = Wide_Resnet50_2()
 
     with torch.no_grad():
         features = extract_features(backbone, image.unsqueeze(0), boxes.unsqueeze(0), MAPS, Scales)
@@ -349,7 +299,7 @@ def model_explainability(im_id,data=annotations,pre_trained_backbone='resnet',
     if regressor_attention:
         density_matrix = output[0][0].detach().cpu().numpy()
     if gradient_attention:
-        attr_grad,default_cmap = interpretability(image_path)
+        attr_grad,default_cmap = interpretability(image_path,pre_trained_backbone)
         normalized_attr_grad = visualize_image_attr(np.transpose(attr_grad.squeeze().cpu().detach().numpy(), (1,2,0)),
                                 cmap=default_cmap,show_colorbar=True,
                                 use_pyplot=False)
@@ -370,7 +320,6 @@ def model_explainability(im_id,data=annotations,pre_trained_backbone='resnet',
     ax[0,1].set_title("FamNet and YOLO Boxes")
     ax[0,1].set_axis_off()
 
-
     ax[1,0].imshow(density_matrix, cmap='hot', interpolation='nearest')
     ax[1,0].set_title("FamNet Regressor Attention")
     ax[1,0].set_axis_off()
@@ -379,10 +328,13 @@ def model_explainability(im_id,data=annotations,pre_trained_backbone='resnet',
     ax[1,1].set_title("Gradient Attention")
     ax[1,1].set_axis_off()
 
-    fig.set_title('Predicted: ', pred_cnt, '\n Ground Truth: ', gt_cnt)
+    fig.suptitle('Predicted: ' + str(round(pred_cnt)) + '\n Ground Truth: ' + str(gt_cnt))
     fig.tight_layout()
-    plt.savefig(data_path+"img_test.png")
+    
+    plt.savefig(output_folder +  "img_" + str(im_id)[:-4] + "_" + str(pre_trained_backbone) + ".png")
     plt.show()
 
+
+
 if __name__ == "__main__":
-    model_explainability(im_id='210.jpg')
+    model_explainability(im_id='211.jpg',pre_trained_backbone='vgg16')
