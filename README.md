@@ -1,7 +1,8 @@
 # Advanced Machine Learning Final Project
 ## LEARNING TO COUNT EVERYTHING...BETTER
+---
 Daniel Jimenez - 1939216 -- Juan Mata Naranjo -1939671 -- Alessandro Quattrociocchi - 1609286 -- Tansel Simsek - 1942297
-
+---
 <p align="center">
 <img src="https://github.com/AMLSapienza/Final_Project/blob/main/data/img_show.png" alt="drawing" width="100" height='100'/>
 </p>
