@@ -3,7 +3,7 @@
 Daniel Jimenez - 1939216 -- Juan Mata Naranjo -1939671 -- Alessandro Quattrociocchi - 1609286 -- Tansel Simsek - 1942297
 
 
-<img src="https://github.com/AMLSapienza/Final_Project/blob/main/data/img_show.png" alt="drawing" width="400"/,height='400'>
+<img src="https://github.com/AMLSapienza/Final_Project/blob/main/data/img_show.png" alt="drawing" width="400" height='400'/>
 
 
 ### References
