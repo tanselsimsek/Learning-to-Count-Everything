@@ -1,10 +1,13 @@
 # LEARNING TO COUNT EVERYTHING...BETTER
+
+<p align="center">
 <i>Advanced Machine Learning - Data Science MSC - La Sapienza University of Rome</i>  
 
 <i>Daniel Jimenez -- Juan Mata Naranjo -- Alessandro Quattrociocchi -- Tansel Simsek<i>
-
+</p>
+  
 <p align="center">
-<img src="https://github.com/AMLSapienza/Final_Project/blob/main/data/img_show.png" alt="drawing" width="100" height='100'/>
+<img src="https://github.com/AMLSapienza/Final_Project/blob/main/data/img_show.png">
 </p>
 
 
