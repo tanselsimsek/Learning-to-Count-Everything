@@ -1,36 +1,52 @@
 # LEARNING TO COUNT EVERYTHING...BETTER
 
 <p align="center">
-<i>Advanced Machine Learning - Data Science MSC - La Sapienza University of Rome</i>  
-
-<i>Daniel Jimenez -- Juan Mata Naranjo -- Alessandro Quattrociocchi -- Tansel Simsek<i>
+<img src=https://github.com/qtt-alessandro/test_colab-/blob/main/sapienza_logo.jpg width="100"/>
+ </p>
+  
+  <p align="center">
+  <b>Advanced Machine Learning Final Project a.y 2021<br />
+La Sapienza University of Rome <br />
+MSC IN DATA SCIENCE<b>  <br />
+Daniel Jimenez, Juan Mata Naranjo, Alessandro Quattrociocchi, Tansel Simsek<b> <br />
 </p>
   
-<p align="center">
-<img src="https://github.com/AMLSapienza/Final_Project/blob/main/data/img_show.png">
-</p>
+  
 
+## Abstract
+Current models to count objects on imagesare often based on pre-trained models and density estima-tion, however they are still not close to optimal. Our pro-posal we first aim at reducing the gap between trainingand test error by introducing regularization techniquessuch Batch Normalization, Dropout and Data Augmenta-tion. In addition, to enhance the behaviour of the model,we proposed to use diverse ImageNet pre-trained mod-els (i.e. VGG16) as an alternative for ResNet50. As afinal novelty, we implemented an ensemble method bycombining ResNet with YOLO to produce a model thatoutperforms the current state-of-the-art work
+
+  
+
+  
+  
+  
+  
+<p align="center">
+<img src="https://github.com/AMLSapienza/Final_Project/blob/main/data/img_show.png" width="500"/ >
+</p>
+   
+### Folder Tree
+```bash
+ └── Final_Project
+    ├── README.md
+    ├── data
+    │   ├── ImageClasses_FSC147.txt
+    │   ├── Train_Test_Val_FSC_147.json
+    │   ├── annotation_FSC147_384.json
+    │   ├── img_show.png
+    │   └── pretrainedModels
+    │       └── FamNet_Save1.pth
+    ├── funcs.py
+    ├── interpretability_captum.py
+    ├── main.ipynb
+    ├── model.py
+    ├── model_explainability.py
+    └── utils_ltce.py
+```
 
 ### References
 - [Learning To Count Everything](https://openaccess.thecvf.com/content/CVPR2021/papers/Ranjan_Learning_To_Count_Everything_CVPR_2021_paper.pdf)
 - [Git Repository](https://github.com/cvlab-stonybrook/LearningToCountEverything)
 
-### Folder Tree
-```bash
-├── README.md
-├── data
-│   ├── ImageClasses_FSC147.txt
-│   ├── Train_Test_Val_FSC_147.json
-│   ├── annotation_FSC147_384.json
-│   └── pretrainedModels
-│       └── FamNet_Save1.pth
-├── model.py
-├── notebooks
-│   ├── AML-LTCE-Test.ipynb
-│   └── AML-LTCE-Train.ipynb
-├── test.py
-├── train.py
-└── utils.py
 
-3 directories, 11 files
-```
