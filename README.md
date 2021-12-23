@@ -5,7 +5,7 @@
  </p>
   
   <p align="center">
-  <b>Advanced Machine Learning Final Project a.y 2021<br />
+  <b>Advanced Machine Learning Final Project a.y 2021-2022<br />
 La Sapienza University of Rome <br />
 MSC IN DATA SCIENCE<b>  <br />
 Daniel Jimenez, Juan Mata Naranjo, Alessandro Quattrociocchi, Tansel Simsek<b> <br />
@@ -46,7 +46,6 @@ Current models to count objects on imagesare often based on pre-trained models a
 ```
 
 ### References
-- [Learning To Count Everything](https://openaccess.thecvf.com/content/CVPR2021/papers/Ranjan_Learning_To_Count_Everything_CVPR_2021_paper.pdf)
-- [Git Repository](https://github.com/cvlab-stonybrook/LearningToCountEverything)
+- [Learning To Count Everything(Original Paper)](https://openaccess.thecvf.com/content/CVPR2021/papers/Ranjan_Learning_To_Count_Everything_CVPR_2021_paper.pdf)
 
 
