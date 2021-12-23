@@ -2,7 +2,9 @@
 ## LEARNING TO COUNT EVERYTHING...BETTER
 Daniel Jimenez - 1939216 -- Juan Mata Naranjo -1939671 -- Alessandro Quattrociocchi - 1609286 -- Tansel Simsek - 1942297
 
-![](https://github.com/AMLSapienza/Final_Project/blob/main/data/img_show.png "Title")
+
+<img src="https://github.com/AMLSapienza/Final_Project/blob/main/data/img_show.png" alt="drawing" width="200"/>
+
 
 ### References
 - [Learning To Count Everything](https://openaccess.thecvf.com/content/CVPR2021/papers/Ranjan_Learning_To_Count_Everything_CVPR_2021_paper.pdf)
