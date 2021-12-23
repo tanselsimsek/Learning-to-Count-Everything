@@ -1,7 +1,7 @@
 # LEARNING TO COUNT EVERYTHING...BETTER
 
 <p align="center">
-<img src=https://github.com/AMLSapienza/Final_Project/blob/main/data/sapienza_logo.jpg width="100"/>
+<img src=https://github.com/AMLSapienza/Final_Project/blob/main/data/im_presentation.png width="100"/>
  </p>
   
   <p align="center">
