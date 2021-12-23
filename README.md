@@ -34,7 +34,6 @@ Current models to count objects on imagesare often based on pre-trained models a
     │   ├── ImageClasses_FSC147.txt
     │   ├── Train_Test_Val_FSC_147.json
     │   ├── annotation_FSC147_384.json
-    │   ├── img_show.png
     │   └── pretrainedModels
     │       └── FamNet_Save1.pth
     ├── funcs.py
